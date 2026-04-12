@@ -1,4 +1,13 @@
-# @hallelx/youtube-transcript
+# Youtube Transcript Ts — `@hallelx/youtube-transcript`
+
+[![npm version](https://img.shields.io/npm/v/@hallelx/youtube-transcript.svg?color=cb3837&logo=npm)](https://www.npmjs.com/package/@hallelx/youtube-transcript)
+[![npm downloads](https://img.shields.io/npm/dm/@hallelx/youtube-transcript.svg?color=cb3837&logo=npm)](https://www.npmjs.com/package/@hallelx/youtube-transcript)
+[![CI](https://github.com/hallelx2/youtube-transcript-ts/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hallelx2/youtube-transcript-ts/actions/workflows/ci.yml)
+[![Release](https://github.com/hallelx2/youtube-transcript-ts/actions/workflows/release.yml/badge.svg)](https://github.com/hallelx2/youtube-transcript-ts/actions/workflows/release.yml)
+[![Provenance](https://img.shields.io/badge/provenance-signed-success?logo=sigstore)](https://www.npmjs.com/package/@hallelx/youtube-transcript)
+[![Types](https://img.shields.io/npm/types/@hallelx/youtube-transcript.svg?color=3178c6&logo=typescript)](https://www.npmjs.com/package/@hallelx/youtube-transcript)
+[![Node](https://img.shields.io/node/v/@hallelx/youtube-transcript.svg?color=5fa04e&logo=node.js)](https://nodejs.org)
+[![License: MIT](https://img.shields.io/npm/l/@hallelx/youtube-transcript.svg?color=blue)](./LICENSE)
 
 Fetch transcripts and subtitles from YouTube videos. Works with both manually
 created captions and auto-generated transcripts. Supports translation and
