@@ -17,6 +17,14 @@
   ],
   "license": "MIT",
   "author": "hallelx2",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hallelx2/youtube-transcript-ts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hallelx2/youtube-transcript-ts/issues"
+  },
+  "homepage": "https://github.com/hallelx2/youtube-transcript-ts#readme",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
