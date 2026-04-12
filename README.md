@@ -1,4 +1,4 @@
-# @hallelx2/youtube-transcript
+# @hallelx/youtube-transcript
 
 Fetch transcripts and subtitles from YouTube videos. Works with both manually
 created captions and auto-generated transcripts. Supports translation and
@@ -16,17 +16,17 @@ Deno when using proxies). Zero runtime dependencies in the common path.
 ## Installation
 
 ```bash
-npm install @hallelx2/youtube-transcript
+npm install @hallelx/youtube-transcript
 # or
-bun add @hallelx2/youtube-transcript
+bun add @hallelx/youtube-transcript
 # or
-pnpm add @hallelx2/youtube-transcript
+pnpm add @hallelx/youtube-transcript
 ```
 
 ## Quick start
 
 ```ts
-import { YouTubeTranscriptApi } from '@hallelx2/youtube-transcript';
+import { YouTubeTranscriptApi } from '@hallelx/youtube-transcript';
 
 const api = new YouTubeTranscriptApi();
 const transcript = await api.fetch('arj7oStGLkU');
@@ -83,7 +83,7 @@ import {
   SRTFormatter,
   WebVTTFormatter,
   TextFormatter,
-} from '@hallelx2/youtube-transcript';
+} from '@hallelx/youtube-transcript';
 
 const transcript = await new YouTubeTranscriptApi().fetch('arj7oStGLkU');
 
@@ -124,7 +124,7 @@ providers. The library exposes two proxy configurations:
 ### Generic HTTP/HTTPS proxy
 
 ```ts
-import { YouTubeTranscriptApi, GenericProxyConfig } from '@hallelx2/youtube-transcript';
+import { YouTubeTranscriptApi, GenericProxyConfig } from '@hallelx/youtube-transcript';
 
 const api = new YouTubeTranscriptApi({
   proxyConfig: new GenericProxyConfig({
@@ -137,7 +137,7 @@ const api = new YouTubeTranscriptApi({
 ### Webshare rotating residential proxies (recommended)
 
 ```ts
-import { YouTubeTranscriptApi, WebshareProxyConfig } from '@hallelx2/youtube-transcript';
+import { YouTubeTranscriptApi, WebshareProxyConfig } from '@hallelx/youtube-transcript';
 
 const api = new YouTubeTranscriptApi({
   proxyConfig: new WebshareProxyConfig({
@@ -195,7 +195,7 @@ import {
   YouTubeTranscriptApi,
   TranscriptsDisabled,
   NoTranscriptFound,
-} from '@hallelx2/youtube-transcript';
+} from '@hallelx/youtube-transcript';
 
 try {
   const transcript = await new YouTubeTranscriptApi().fetch('xxx');
