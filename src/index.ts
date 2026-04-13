@@ -5,6 +5,7 @@ export { Transcript } from './transcripts/transcript.js';
 export type {
   TranslationLanguage,
   TranscriptFetchOptions,
+  TranscriptFetchFallback,
 } from './transcripts/transcript.js';
 export { TranscriptList } from './transcripts/transcriptList.js';
 export type { CaptionsJson } from './transcripts/transcriptList.js';
