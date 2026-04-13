@@ -142,6 +142,13 @@ const REQUEST_BLOCKED_BASE_CAUSE_MESSAGE =
   'Google Cloud Platform, Azure, etc.). Unfortunately, most IPs from cloud ' +
   'providers are blocked by YouTube.\n\n';
 
+/**
+ * Thrown when YouTube blocks requests from the current IP. This can be due to
+ * too many requests, usage of a cloud provider IP, or bot detection.
+ *
+ * This is the parent class for specific block types like `IpBlocked`. Consumer
+ * code should generally catch this class to handle all block scenarios.
+ */
 export class RequestBlocked extends CouldNotRetrieveTranscript {
   protected static override CAUSE_MESSAGE =
     REQUEST_BLOCKED_BASE_CAUSE_MESSAGE +
@@ -208,6 +215,14 @@ export class RequestBlocked extends CouldNotRetrieveTranscript {
   }
 }
 
+/**
+ * Thrown specifically for HTTP 429 "Too Many Requests" responses or when
+ * YouTube shows a reCAPTCHA challenge page.
+ *
+ * Extends `RequestBlocked`. Consumer code that wants to handle ALL IP-block
+ * cases (including innertube bot detection) should catch `RequestBlocked`,
+ * not `IpBlocked`.
+ */
 export class IpBlocked extends RequestBlocked {
   protected static override CAUSE_MESSAGE =
     REQUEST_BLOCKED_BASE_CAUSE_MESSAGE +
