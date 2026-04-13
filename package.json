@@ -1,6 +1,6 @@
 {
   "name": "@hallelx/youtube-transcript",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Fetch YouTube video transcripts and subtitles (manual and auto-generated) from Node.js, Bun, and Deno. TypeScript port of youtube-transcript-api.",
   "keywords": [
     "youtube",
