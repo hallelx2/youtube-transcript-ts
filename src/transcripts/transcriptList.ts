@@ -1,6 +1,10 @@
 import { NoTranscriptFound } from '../errors/index.js';
 import type { HttpClient } from '../utils/httpClient.js';
-import { Transcript, type TranslationLanguage } from './transcript.js';
+import {
+  Transcript,
+  type TranscriptFetchFallback,
+  type TranslationLanguage,
+} from './transcript.js';
 
 interface RawCaptionTrack {
   baseUrl: string;
@@ -42,6 +46,7 @@ export class TranscriptList implements Iterable<Transcript> {
     httpClient: HttpClient,
     videoId: string,
     captionsJson: CaptionsJson,
+    fallback?: TranscriptFetchFallback,
   ): TranscriptList {
     const translationLanguages: TranslationLanguage[] = (
       captionsJson.translationLanguages ?? []
@@ -70,6 +75,7 @@ export class TranscriptList implements Iterable<Transcript> {
           caption.languageCode,
           isAsr,
           transcriptTranslationLangs,
+          fallback,
         ),
       );
     }

@@ -1,12 +1,14 @@
 import type { ProxyConfig } from './proxies/proxyConfig.js';
 import type { FetchedTranscript } from './transcripts/fetchedTranscript.js';
 import { TranscriptListFetcher } from './transcripts/fetcher.js';
+import type { TranscriptFetchFallback } from './transcripts/transcript.js';
 import type { TranscriptList } from './transcripts/transcriptList.js';
 import { HttpClient, type FetchFn } from './utils/httpClient.js';
 
 export interface YouTubeTranscriptApiOptions {
   proxyConfig?: ProxyConfig;
   fetchFn?: FetchFn;
+  transcriptFetchFallback?: TranscriptFetchFallback;
 }
 
 export interface FetchOptions {
@@ -20,7 +22,11 @@ export class YouTubeTranscriptApi {
 
   constructor(options: YouTubeTranscriptApiOptions = {}) {
     this._httpClient = new HttpClient(options);
-    this._fetcher = new TranscriptListFetcher(this._httpClient, options.proxyConfig);
+    this._fetcher = new TranscriptListFetcher(
+      this._httpClient,
+      options.proxyConfig,
+      options.transcriptFetchFallback,
+    );
   }
 
   async list(videoId: string): Promise<TranscriptList> {
