@@ -26,7 +26,8 @@ afterEach(() => {
 
 describe('transcriptFetchFallback', () => {
   it('is called exactly once when the primary fetch throws IpBlocked', async () => {
-    const fetchFn = vi.fn(async (url: string) => {
+    const fetchFn = vi.fn(async (input: string | URL | Request) => {
+      const url = typeof input === 'string' ? input : input.toString();
       if (url.startsWith('https://www.youtube.com/watch?v=')) {
         return new Response(HAPPY_HTML);
       }
@@ -54,7 +55,8 @@ describe('transcriptFetchFallback', () => {
   });
 
   it('is NOT called when the primary fetch succeeds', async () => {
-    const fetchFn = vi.fn(async (url: string) => {
+    const fetchFn = vi.fn(async (input: string | URL | Request) => {
+      const url = typeof input === 'string' ? input : input.toString();
       if (url.startsWith('https://www.youtube.com/watch?v=')) {
         return new Response(HAPPY_HTML);
       }
@@ -76,7 +78,8 @@ describe('transcriptFetchFallback', () => {
   });
 
   it('is NOT called for PoTokenRequired', async () => {
-    const fetchFn = vi.fn(async (url: string) => {
+    const fetchFn = vi.fn(async (input: string | URL | Request) => {
+      const url = typeof input === 'string' ? input : input.toString();
       if (url.startsWith('https://www.youtube.com/watch?v=')) {
         return new Response(HAPPY_HTML);
       }
@@ -96,7 +99,8 @@ describe('transcriptFetchFallback', () => {
   });
 
   it('re-raises the original error when fallback returns null', async () => {
-    const fetchFn = vi.fn(async (url: string) => {
+    const fetchFn = vi.fn(async (input: string | URL | Request) => {
+      const url = typeof input === 'string' ? input : input.toString();
       if (url.startsWith('https://www.youtube.com/watch?v=')) {
         return new Response(HAPPY_HTML);
       }
@@ -117,7 +121,8 @@ describe('transcriptFetchFallback', () => {
   });
 
   it('produces a parsed FetchedTranscript when fallback returns a valid Response', async () => {
-    const fetchFn = vi.fn(async (url: string) => {
+    const fetchFn = vi.fn(async (input: string | URL | Request) => {
+      const url = typeof input === 'string' ? input : input.toString();
       if (url.startsWith('https://www.youtube.com/watch?v=')) {
         return new Response(HAPPY_HTML);
       }
@@ -138,7 +143,7 @@ describe('transcriptFetchFallback', () => {
     const transcript = await api.fetch(VIDEO_ID);
 
     expect(transcript.snippets.length).toBeGreaterThan(0);
-    expect(transcript.snippets[0].text).toBe('Hey, this is just a test');
+    expect(transcript.snippets[0]?.text).toBe('Hey, this is just a test');
     expect(fallback).toHaveBeenCalledTimes(1);
   });
 });
