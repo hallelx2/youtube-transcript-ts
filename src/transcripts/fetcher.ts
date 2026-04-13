@@ -14,6 +14,7 @@ import type { ProxyConfig } from '../proxies/proxyConfig.js';
 import { innertubeApiUrl, INNERTUBE_CONTEXT, watchUrl } from '../settings.js';
 import { decodeHtmlEntities } from '../utils/htmlEntities.js';
 import type { HttpClient } from '../utils/httpClient.js';
+import type { TranscriptFetchFallback } from './transcript.js';
 import { TranscriptList, type CaptionsJson } from './transcriptList.js';
 
 const PLAYABILITY_STATUS_OK = 'OK';
@@ -68,15 +69,26 @@ async function raiseHttpErrors(
 export class TranscriptListFetcher {
   private readonly _httpClient: HttpClient;
   private readonly _proxyConfig: ProxyConfig | undefined;
+  private readonly _fallback: TranscriptFetchFallback | undefined;
 
-  constructor(httpClient: HttpClient, proxyConfig: ProxyConfig | undefined) {
+  constructor(
+    httpClient: HttpClient,
+    proxyConfig: ProxyConfig | undefined,
+    fallback?: TranscriptFetchFallback,
+  ) {
     this._httpClient = httpClient;
     this._proxyConfig = proxyConfig;
+    this._fallback = fallback;
   }
 
   async fetch(videoId: string): Promise<TranscriptList> {
     const captionsJson = await this._fetchCaptionsJson(videoId, 0);
-    return TranscriptList.build(this._httpClient, videoId, captionsJson);
+    return TranscriptList.build(
+      this._httpClient,
+      videoId,
+      captionsJson,
+      this._fallback,
+    );
   }
 
   private async _fetchCaptionsJson(

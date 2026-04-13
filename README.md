@@ -178,6 +178,31 @@ const api = new YouTubeTranscriptApi({
 });
 ```
 
+### Partial blocking (transcript fallback)
+
+Sometimes YouTube allows the initial metadata discovery (the `list()` call) but
+blocks the final transcript fetch. For this case, you can provide a
+`transcriptFetchFallback` to route only the final step through a proxy or relay:
+
+```ts
+const api = new YouTubeTranscriptApi({
+  transcriptFetchFallback: async (signedUrl, videoId) => {
+    // signedUrl contains a temporary auth token. Your proxy will see this.
+    const res = await fetch(
+      `https://your-proxy.io/?url=${encodeURIComponent(signedUrl)}`,
+    );
+    return res.ok ? res : null;
+  },
+});
+
+// fetch() will now use the fallback automatically if the primary request is blocked
+const transcript = await api.fetch('arj7oStGLkU');
+```
+
+**Note:** Free public CORS proxies have no SLA and are often unreliable for
+production use. For serious workloads, it is recommended to use a residential
+proxy provider or a dedicated transcription service.
+
 ## Error handling
 
 All exceptions extend `YouTubeTranscriptApiException`. The most useful
@@ -223,7 +248,11 @@ try {
 
 ```ts
 class YouTubeTranscriptApi {
-  constructor(options?: { proxyConfig?: ProxyConfig; fetchFn?: typeof fetch });
+  constructor(options?: {
+    proxyConfig?: ProxyConfig;
+    fetchFn?: typeof fetch;
+    transcriptFetchFallback?: (signedUrl: string, videoId: string) => Promise<Response | null>;
+  });
   fetch(videoId: string, options?: { languages?: string[]; preserveFormatting?: boolean }): Promise<FetchedTranscript>;
   list(videoId: string): Promise<TranscriptList>;
 }
