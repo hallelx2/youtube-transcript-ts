@@ -180,24 +180,29 @@ const api = new YouTubeTranscriptApi({
 
 ## Error handling
 
-All exceptions extend `YouTubeTranscriptApiException`. The most useful
-subclasses are:
+All exceptions extend `YouTubeTranscriptApiException`. The library uses a
+hierarchical error structure so you can catch broad categories of failure or
+specific edge cases:
 
-| Error | When |
-| --- | --- |
-| `VideoUnavailable` | Video doesn't exist or has been removed |
-| `InvalidVideoId` | A URL was passed instead of a video ID |
-| `VideoUnplayable` | Region-blocked, copyright strike, or similar |
-| `AgeRestricted` | Video requires sign-in for age verification |
-| `TranscriptsDisabled` | Video has no captions enabled |
-| `NoTranscriptFound` | None of the requested languages exist |
-| `NotTranslatable` | Tried to translate a non-translatable transcript |
-| `TranslationLanguageNotAvailable` | Translation target language unavailable |
-| `RequestBlocked` / `IpBlocked` | YouTube blocked your IP |
-| `PoTokenRequired` | Video requires a PO Token (rare) |
-| `FailedToCreateConsentCookie` | Could not bypass the EU consent screen |
-| `YouTubeRequestFailed` | Underlying HTTP request failed |
-| `YouTubeDataUnparsable` | YouTube response shape changed unexpectedly |
+- `YouTubeTranscriptApiException` — **base class**
+  - `CookieError` — any cookie-related failure
+    - `CookiePathInvalid`
+    - `CookieInvalid`
+  - `CouldNotRetrieveTranscript` — **catch this for any fetch failure**
+    - `YouTubeDataUnparsable` — YouTube response shape changed
+    - `YouTubeRequestFailed` — network-level error
+    - `VideoUnplayable` — region-locked or copyright strike
+    - `VideoUnavailable` — video deleted or private
+    - `InvalidVideoId` — passed a URL instead of an ID
+    - `RequestBlocked` — **catch this to handle all IP blocks**
+      - `IpBlocked` — specifically HTTP 429 or reCAPTCHA
+    - `TranscriptsDisabled` — no captions on this video
+    - `AgeRestricted` — requires sign-in
+    - `NotTranslatable`
+    - `TranslationLanguageNotAvailable`
+    - `FailedToCreateConsentCookie`
+    - `NoTranscriptFound` — requested language doesn't exist
+    - `PoTokenRequired`
 
 ```ts
 import {
@@ -216,6 +221,70 @@ try {
   } else {
     throw err;
   }
+}
+```
+
+### Catching errors correctly
+
+When handling IP blocks, always catch the parent `RequestBlocked` class rather
+than the specific `IpBlocked` subclass. YouTube often uses "bot detection"
+mechanisms that throw `RequestBlocked` directly; if you only catch `IpBlocked`,
+your error handler will be skipped.
+
+```ts
+// ✅ CORRECT: Catches both 429s and bot-detection blocks
+try {
+  const transcript = await api.fetch(videoId);
+} catch (err) {
+  if (err instanceof RequestBlocked) {
+    // fall back to a proxy or different provider
+  }
+}
+
+// ❌ WRONG: Misses bot-detection cases
+try {
+  const transcript = await api.fetch(videoId);
+} catch (err) {
+  if (err instanceof IpBlocked) {
+    // this block will NOT run if YouTube returns REASON_BOT_DETECTED
+  }
+}
+```
+
+### Common patterns
+
+#### Pattern 1: Retry-worthy errors
+Use this for transient issues where a different IP or a retry might succeed.
+
+```ts
+try {
+  return await api.fetch(videoId);
+} catch (err) {
+  if (err instanceof RequestBlocked) {
+    // IP block or bot detection — fall back to proxy or another provider
+    return fetchWithProxy(videoId);
+  }
+  throw err;
+}
+```
+
+#### Pattern 2: Permanent failures
+Use this to distinguish between videos that will never have transcripts and
+those that failed for transient reasons.
+
+```ts
+try {
+  return await api.fetch(videoId);
+} catch (err) {
+  if (err instanceof TranscriptsDisabled || err instanceof NoTranscriptFound) {
+    // Video has no captions at all — no point retrying
+    return transcribeWithAssemblyAI(videoId);
+  }
+  if (err instanceof RequestBlocked) {
+    // Transient — retry or fall back
+    return fetchWithProxy(videoId);
+  }
+  throw err;
 }
 ```
 
