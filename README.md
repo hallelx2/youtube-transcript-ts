@@ -199,15 +199,19 @@ const api = new YouTubeTranscriptApi({
 
 ### Strategy #3: Free CORS proxy fallback
 
-You can use a public CORS proxy as a last resort.
+You can use a public CORS proxy as a last resort by routing only the signed
+`timedtext` URL through `transcriptFetchFallback`:
 
 > [!WARNING]
 > This is not production-grade. Free CORS proxies have no SLA, log your signed URLs, and can rate-limit or disappear at any time. Fine for side projects; use a real proxy for production.
 
 ```ts
 const api = new YouTubeTranscriptApi({
-  fetchFn: (url, init) => {
-    return fetch(`https://api.corsproxy.io/?url=${encodeURIComponent(url.toString())}`, init);
+  transcriptFetchFallback: async (signedUrl) => {
+    const response = await fetch(
+      `https://corsproxy.io/?${encodeURIComponent(signedUrl)}`,
+    );
+    return response.ok ? response : null;
   },
 });
 ```
