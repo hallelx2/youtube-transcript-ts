@@ -32,6 +32,9 @@ bun add @hallelx/youtube-transcript
 pnpm add @hallelx/youtube-transcript
 ```
 
+> [!IMPORTANT]
+> **Deploying to Vercel, AWS Lambda, or Cloudflare Workers?** YouTube often blocks transcript requests from datacenter IP addresses. Read the [Deploying on serverless platforms](#deploying-on-serverless-platforms) section before starting.
+
 ## Quick start
 
 ```ts
@@ -124,6 +127,114 @@ youtube-transcript --translate fr arj7oStGLkU
 ```
 
 Run `youtube-transcript --help` for the full list of options.
+
+## Deploying on serverless platforms
+
+YouTube tightly restricts access to its transcript endpoints from datacenter IP addresses (Vercel, AWS, Cloudflare, etc.). While it may work locally, you will often encounter `RequestBlocked` or `IpBlocked` errors in production.
+
+YouTube serves transcripts from two main internal endpoints. Starting in late 2024, they tightened enforcement on the `timedtext` endpoint, which now heavily penalizes datacenter IP reputations while continuing to serve residential and mobile IPs. This means serverless functions and cloud hosting providers are blocked by default.
+
+For a deep dive into the technical details and current community reports, see the [umbrella issue (#1)](https://github.com/hallelx2/youtube-transcript-ts/issues/1).
+
+### Platform compatibility
+
+| Platform                  | Works out of the box? | Recommended strategy             |
+|---------------------------|-----------------------|----------------------------------|
+| Local dev (home internet) | Yes                   | No proxy needed                  |
+| Vercel serverless         | No                    | WebshareProxyConfig or fallback  |
+| AWS Lambda                | No                    | WebshareProxyConfig or fallback  |
+| Cloudflare Workers        | No                    | Custom fetchFn + external relay  |
+| Netlify Functions         | No                    | WebshareProxyConfig or fallback  |
+| Render web service        | Partial               | Long-lived IP, ~70-90% success   |
+| Railway                   | Partial               | Similar to Render                |
+| Fly.io                    | Partial               | Depends on region                |
+| Self-hosted (residential) | Yes                   | No proxy needed                  |
+
+*As of April 2026. YouTube enforcement changes frequently — please report regressions in the [umbrella issue](https://github.com/hallelx2/youtube-transcript-ts/issues/1).*
+
+### Strategy #1: Webshare residential proxies (Recommended)
+
+Residential proxies use IP addresses assigned to home internet connections, which have a much higher reputation than datacenter IPs.
+
+1.  **Sign up:** Create an account at [webshare.io](https://webshare.io) and purchase a **Residential** plan (do NOT use "Proxy Server", "Static Residential", or the free tier).
+2.  **Environment Variables:** Add `WEBSHARE_PROXY_USERNAME` and `WEBSHARE_PROXY_PASSWORD` to your platform's dashboard (e.g., Vercel Project Settings > Environment Variables).
+3.  **Install Dependencies:** If using Node.js, ensure `undici` is installed as a production dependency: `npm install undici`.
+4.  **Implementation:**
+
+```ts
+import { YouTubeTranscriptApi, WebshareProxyConfig } from '@hallelx/youtube-transcript';
+
+const api = new YouTubeTranscriptApi({
+  proxyConfig: process.env.WEBSHARE_PROXY_USERNAME
+    ? new WebshareProxyConfig({
+        proxyUsername: process.env.WEBSHARE_PROXY_USERNAME,
+        proxyPassword: process.env.WEBSHARE_PROXY_PASSWORD,
+      })
+    : undefined,
+});
+```
+
+**Cost:** ~$6/month. **Success Rate:** ~99%.
+
+### Strategy #2: Generic proxy / custom fetchFn
+
+If you already have a proxy provider (Bright Data, Oxylabs, etc.) or are on a platform like Cloudflare Workers where `undici` is unavailable, use `GenericProxyConfig` or a custom `fetchFn`.
+
+```ts
+// Using a generic proxy
+const api = new YouTubeTranscriptApi({
+  proxyConfig: new GenericProxyConfig({
+    httpUrl: 'http://user:pass@proxy.example.com:8080',
+    httpsUrl: 'https://user:pass@proxy.example.com:8080',
+  }),
+});
+
+// Using a custom fetch (e.g., for a relay or specialized client)
+const api = new YouTubeTranscriptApi({
+  fetchFn: (url, init) => {
+    return fetch(`https://my-proxy-relay.com?url=${encodeURIComponent(url.toString())}`, init);
+  },
+});
+```
+
+### Strategy #3: Free CORS proxy fallback
+
+You can use a public CORS proxy as a last resort.
+
+> [!WARNING]
+> This is not production-grade. Free CORS proxies have no SLA, log your signed URLs, and can rate-limit or disappear at any time. Fine for side projects; use a real proxy for production.
+
+```ts
+const api = new YouTubeTranscriptApi({
+  fetchFn: (url, init) => {
+    return fetch(`https://api.corsproxy.io/?url=${encodeURIComponent(url.toString())}`, init);
+  },
+});
+```
+
+### Strategy #4: Fallback to another service
+
+A robust production implementation should catch `RequestBlocked` and fall back to an external transcription service (e.g., AssemblyAI, Deepgram) which can also handle videos where transcripts are truly disabled.
+
+```ts
+import { YouTubeTranscriptApi, RequestBlocked } from '@hallelx/youtube-transcript';
+
+const api = new YouTubeTranscriptApi();
+
+try {
+  const transcript = await api.fetch(videoId);
+} catch (err) {
+  if (err instanceof RequestBlocked) {
+    // Fallback to AssemblyAI / Deepgram / etc.
+    return fetchAlternativeService(videoId);
+  }
+  throw err;
+}
+```
+
+### Local development notes
+
+Local development usually works without any configuration because your ISP provides a residential IP. If you hit blocks locally, ensure you are not on a VPN or corporate network. If you must use a VPN, configure the library with a proxy as shown above.
 
 ## Working around IP bans (proxies)
 
